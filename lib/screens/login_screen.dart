@@ -7,35 +7,32 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   String email = '';
   String password = '';
   bool isLoading = false;
-  final _formKey = GlobalKey<FormState>();
 
   Future<void> handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => isLoading = true);
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    String? storedEmail = prefs.getString('userEmail');
-    String? storedPassword = prefs.getString('userPassword');
-    String? storedName = prefs.getString('userName'); // Recuperamos el nombre
+    final prefs = await SharedPreferences.getInstance();
+    final savedEmail = prefs.getString('userEmail');
+    final savedPassword = prefs.getString('userPassword');
 
     await Future.delayed(Duration(seconds: 1));
 
-    if (email == storedEmail && password == storedPassword) {
-      // Login correcto, guardamos el nombre actual para HomeScreen
-      await prefs.setString('currentUserName', storedName ?? 'Coach');
-
+    if (email == savedEmail && password == savedPassword) {
+      // Guardamos el nombre del usuario actual para HomeScreen
+      await prefs.setString('currentUserName', prefs.getString('userName') ?? '');
+      setState(() => isLoading = false);
       Navigator.pushReplacementNamed(context, '/home');
     } else {
+      setState(() => isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Email o contraseña incorrectos')),
       );
     }
-
-    setState(() => isLoading = false);
   }
 
   String? validateEmail(String? value) {
@@ -47,6 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   String? validatePassword(String? value) {
     if (value == null || value.isEmpty) return 'Ingresa tu contraseña';
+    if (value.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
     return null;
   }
 
@@ -71,7 +69,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextFormField(
                     decoration: InputDecoration(labelText: 'Correo Electrónico', border: OutlineInputBorder()),
                     onChanged: (val) => email = val,
-                    enabled: !isLoading,
                     validator: validateEmail,
                   ),
                   SizedBox(height: 16),
@@ -79,7 +76,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     decoration: InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
                     obscureText: true,
                     onChanged: (val) => password = val,
-                    enabled: !isLoading,
                     validator: validatePassword,
                   ),
                   SizedBox(height: 24),

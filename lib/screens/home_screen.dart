@@ -4,19 +4,21 @@ import 'profile_screen.dart';
 import '../widgets/bottom_nav.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  String? _userName;
-  String? _userTeam;
-  String? _userAvatar;
+  String _userName = 'Coach';
+  String _userTeam = 'U12 Escorpiones';
+  String _userAvatar = 'https://i.pravatar.cc/150?img=3';
 
   final List<Map<String, dynamic>> _trainingSessions = [
-    {'date': DateTime.now().add(Duration(days: 1)), 'objective': 'Dribbling y pases', 'duration': '1h'},
-    {'date': DateTime.now().add(Duration(days: 3)), 'objective': 'Tiro y defensa', 'duration': '1h 30min'},
+    {'date': DateTime.now().add(const Duration(days: 1)), 'objective': 'Dribbling y pases', 'duration': '1h'},
+    {'date': DateTime.now().add(const Duration(days: 3)), 'objective': 'Tiro y defensa', 'duration': '1h 30min'},
   ];
 
   late List<Widget> _screens;
@@ -24,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _screens = List.generate(4, (_) => Center(child: CircularProgressIndicator()));
+    _screens = List.generate(4, (_) => const Center(child: CircularProgressIndicator()));
     _loadUserData();
   }
 
@@ -32,14 +34,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _userName = prefs.getString('userName') ?? 'Coach';
-      _userTeam = prefs.getString('team') ?? 'Equipo U12';
+      _userTeam = prefs.getString('team') ?? 'U12 Escorpiones';
       _userAvatar = prefs.getString('avatar') ?? 'https://i.pravatar.cc/150?img=3';
 
       _screens = [
         _dashboardScreen(),
-        Center(child: Text('Calendar')),
-        Center(child: Text('Community')),
-        ProfileScreen(),
+        const Center(child: Text('Calendar')),
+        const Center(child: Text('Community')),
+        ProfileScreen(onProfileUpdated: _loadUserData),
       ];
     });
   }
@@ -51,55 +53,55 @@ class _HomeScreenState extends State<HomeScreen> {
       ..sort((a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime));
 
     return SingleChildScrollView(
-      padding: EdgeInsets.all(16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              CircleAvatar(radius: 32, backgroundImage: NetworkImage(_userAvatar!)),
-              SizedBox(width: 16),
+              CircleAvatar(radius: 32, backgroundImage: NetworkImage(_userAvatar)),
+              const SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('¡Bienvenido, ${_userName!.split(' ')[0]}!',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  Text(_userTeam!),
+                  Text(
+                    '¡Bienvenido, $_userName!',
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    _userTeam,
+                    style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+                  ),
                 ],
-              ),
-              Spacer(),
-              IconButton(
-                icon: Icon(Icons.settings_outlined),
-                onPressed: () => Navigator.pushNamed(context, '/onboarding'),
               ),
             ],
           ),
-          SizedBox(height: 24),
+          const SizedBox(height: 24),
           Card(
             color: Colors.orange.shade50,
             child: Padding(
-              padding: EdgeInsets.all(16),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Planificar para $_userTeam',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 8),
-                  Text('Usa la IA o planifica tu próximo entrenamiento manualmente.'),
-                  SizedBox(height: 16),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('Usa la IA o planifica tu próximo entrenamiento manualmente.'),
+                  const SizedBox(height: 16),
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () => Navigator.pushNamed(context, '/recommendations'),
-                          child: Text('Recomendaciones IA'),
+                          child: const Text('Recomendaciones IA'),
                         ),
                       ),
-                      SizedBox(width: 8),
+                      const SizedBox(width: 8),
                       Expanded(
                         child: OutlinedButton(
                           onPressed: () => Navigator.pushNamed(context, '/calendar'),
-                          child: Text('Planificar Manualmente'),
+                          child: const Text('Planificar Manualmente'),
                         ),
                       ),
                     ],
@@ -108,10 +110,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
-          SizedBox(height: 24),
-          Text('Próximos Entrenamientos',
+          const SizedBox(height: 24),
+          const Text('Próximos Entrenamientos',
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           upcomingSessions.isNotEmpty
               ? Column(
                   children: upcomingSessions.map((session) {
@@ -120,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: ListTile(
                         title: Text(session['objective']),
                         subtitle: Text('${date.day}/${date.month} | ${session['duration']}'),
-                        trailing: Icon(Icons.arrow_forward_ios),
+                        trailing: const Icon(Icons.arrow_forward_ios),
                         onTap: () {},
                       ),
                     );
@@ -128,12 +130,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 )
               : Column(
                   children: [
-                    SizedBox(height: 16),
-                    Text('No hay próximas sesiones para $_userTeam.', textAlign: TextAlign.center),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 16),
+                    Text('No hay próximas sesiones para $_userTeam.',
+                        textAlign: TextAlign.center),
+                    const SizedBox(height: 8),
                     ElevatedButton(
                       onPressed: () => Navigator.pushNamed(context, '/calendar'),
-                      child: Text('Crear una sesión'),
+                      child: const Text('Crear una sesión'),
                     ),
                   ],
                 ),
@@ -145,9 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _screens.isNotEmpty
-          ? _screens[_currentIndex]
-          : Center(child: CircularProgressIndicator()),
+      body: _screens[_currentIndex],
       bottomNavigationBar: BottomNav(
         currentIndex: _currentIndex,
         onTap: (index) {
@@ -159,3 +160,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+

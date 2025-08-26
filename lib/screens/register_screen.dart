@@ -11,26 +11,41 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String email = '';
   String password = '';
   bool isLoading = false;
+  final _formKey = GlobalKey<FormState>();
 
   Future<void> handleRegister() async {
-    if (name.isEmpty || email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Todos los campos son obligatorios')),
-      );
-      return;
-    }
+    if (!_formKey.currentState!.validate()) return;
 
-   setState(() => isLoading = true);
+    setState(() => isLoading = true);
     await Future.delayed(Duration(seconds: 1));
 
-    // Guardar datos en SharedPreferences
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('name', name);
-    await prefs.setString('email', email);
-    await prefs.setString('password', password);
+    await prefs.setString('userName', name);      // Nombre
+    await prefs.setString('userEmail', email);    // Email
+    await prefs.setString('userPassword', password); // Contraseña
+    await prefs.setString('team', 'U12 Escorpiones'); // Equipo inicial
+    await prefs.setString('currentUserName', name);   // Usuario actual para HomeScreen
 
     setState(() => isLoading = false);
     Navigator.pushReplacementNamed(context, '/home');
+  }
+
+  String? validateName(String? value) {
+    if (value == null || value.isEmpty) return 'Ingresa tu nombre';
+    return null;
+  }
+
+  String? validateEmail(String? value) {
+    if (value == null || value.isEmpty) return 'Ingresa tu correo';
+    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+    if (!emailRegex.hasMatch(value)) return 'Correo no válido';
+    return null;
+  }
+
+  String? validatePassword(String? value) {
+    if (value == null || value.isEmpty) return 'Ingresa tu contraseña';
+    if (value.length < 6) return 'La contraseña debe tener al menos 6 caracteres';
+    return null;
   }
 
   @override
@@ -44,46 +59,52 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Container(
             width: 350,
             padding: EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Crear una Cuenta', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-                SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(labelText: 'Tu Nombre', border: OutlineInputBorder()),
-                  onChanged: (val) => name = val,
-                  enabled: !isLoading,
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(labelText: 'Correo Electrónico', border: OutlineInputBorder()),
-                  onChanged: (val) => email = val,
-                  enabled: !isLoading,
-                ),
-                SizedBox(height: 16),
-                TextField(
-                  decoration: InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
-                  obscureText: true,
-                  onChanged: (val) => password = val,
-                  enabled: !isLoading,
-                ),
-                SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : handleRegister,
-                    child: isLoading
-                        ? CircularProgressIndicator(color: Colors.white)
-                        : Text('Registrarse'),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Crear una Cuenta', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Tu Nombre', border: OutlineInputBorder()),
+                    onChanged: (val) => name = val,
+                    enabled: !isLoading,
+                    validator: validateName,
                   ),
-                ),
-                SizedBox(height: 16),
-                TextButton(
-                  onPressed: () => Navigator.pushNamed(context, '/login'),
-                  child: Text('¿Ya tienes cuenta? Iniciar Sesión'),
-                ),
-              ],
+                  SizedBox(height: 16),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Correo Electrónico', border: OutlineInputBorder()),
+                    onChanged: (val) => email = val,
+                    enabled: !isLoading,
+                    validator: validateEmail,
+                  ),
+                  SizedBox(height: 16),
+                  TextFormField(
+                    decoration: InputDecoration(labelText: 'Contraseña', border: OutlineInputBorder()),
+                    obscureText: true,
+                    onChanged: (val) => password = val,
+                    enabled: !isLoading,
+                    validator: validatePassword,
+                  ),
+                  SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : handleRegister,
+                      child: isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text('Registrarse'),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, '/login'),
+                    child: Text('¿Ya tienes cuenta? Iniciar Sesión'),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
