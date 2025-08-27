@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'manage_teams.dart';
 import 'dart:convert';
 import 'package:fl_chart/fl_chart.dart';
+import 'training_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final VoidCallback? onProfileUpdated;
@@ -16,6 +17,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   String _userName = 'Álex Ray';
   String _userTeam = 'U12 Escorpiones';
+  //Variables para guardar evaluaciones
 
   Map<String, List<Map<String, String>>> _teamsPlayers = {
     'Premini': [
@@ -23,6 +25,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       {'name': 'María', 'number': '8', 'coach': '1º Entrenador'},
     ],
   };
+  Map<String, Map<String, Map<String, int>>> _evaluations = {};
 
   Map<String, String> _teamCoach = {
     'Premini': '1º Entrenador',
@@ -35,10 +38,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final Map<String, Map<String, List<Map<String, String>>>> _sessions = {
     'Premini': {
       'Agosto 2025': [
-        {'name': 'Táctica Defensiva', 'date': '10 de agosto', 'duration': '1 h'},
+        {
+          'name': 'Táctica Defensiva',
+          'date': '10 de agosto',
+          'duration': '1 h'
+        },
       ],
       'Julio 2025': [
-        {'name': 'Rebotes y salida rápida', 'date': '21 de julio', 'duration': '1 h'},
+        {
+          'name': 'Rebotes y salida rápida',
+          'date': '21 de julio',
+          'duration': '1 h'
+        },
       ],
     },
   };
@@ -50,12 +61,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
       'Efectividad': 0,
     },
   };
+  void _updateTeamStats() {
+    final today = DateTime.now();
+    final teamSessions = _evaluations[_selectedTeam] ?? {};
+
+    int diversionSum = 0;
+    int aprendizajeSum = 0;
+    int efectividadSum = 0;
+    int count = 0;
+
+    teamSessions.forEach((dateStr, stats) {
+      final parts = dateStr.split('-'); // dd-MM-yyyy
+      final date = DateTime(
+        int.parse(parts[2]),
+        int.parse(parts[1]),
+        int.parse(parts[0]),
+      );
+      if (date.isBefore(today) || date.isAtSameMomentAs(today)) {
+        diversionSum += stats['Diversion'] ?? 0;
+        aprendizajeSum += stats['Aprendizaje'] ?? 0;
+        efectividadSum += stats['Efectividad'] ?? 0;
+        count++;
+      }
+    });
+
+    if (count > 0) {
+      _teamStats[_selectedTeam] = {
+        'Diversion': (diversionSum / count).round(),
+        'Aprendizaje': (aprendizajeSum / count).round(),
+        'Efectividad': (efectividadSum / count).round(),
+      };
+    } else {
+      _teamStats[_selectedTeam] = {
+        'Diversion': 0,
+        'Aprendizaje': 0,
+        'Efectividad': 0
+      };
+    }
+
+    setState(() {});
+  }
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
     _loadTeamsPlayers();
+    _loadEvaluations();
   }
 
   Future<void> _loadUserData() async {
@@ -64,6 +116,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _userName = prefs.getString('userName') ?? 'Álex Ray';
       _userTeam = prefs.getString('team') ?? 'U12 Escorpiones';
     });
+  }
+
+  Future<void> _saveEvaluations() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('evaluations', jsonEncode(_evaluations));
+  }
+
+  Future<void> _loadEvaluations() async {
+    final prefs = await SharedPreferences.getInstance();
+    final evalString = prefs.getString('evaluations');
+    if (evalString != null) {
+      final decoded = jsonDecode(evalString) as Map<String, dynamic>;
+      _evaluations = decoded.map((team, sessions) {
+        return MapEntry(
+            team,
+            (sessions as Map<String, dynamic>).map((date, stats) {
+              return MapEntry(date, Map<String, int>.from(stats as Map));
+            }));
+      });
+    }
+    _updateTeamStats(); // recalcular medias
   }
 
   Future<void> _loadTeamsPlayers() async {
@@ -173,12 +246,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
             children: [
               const CircleAvatar(
                 radius: 50,
-                backgroundImage: NetworkImage('https://i.pravatar.cc/150?img=3'),
+                backgroundImage:
+                    NetworkImage('https://i.pravatar.cc/150?img=3'),
               ),
               const SizedBox(height: 16),
               Text(
                 _userName,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Text(
@@ -201,7 +276,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       const Text(
                         'Mis Equipos',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       ..._teamsPlayers.entries.map(
                         (entry) => ExpansionTile(
@@ -213,7 +289,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
-                                      fontSize: 16, fontWeight: FontWeight.bold),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold),
                                 ),
                               ),
                               const SizedBox(width: 12),
@@ -264,7 +341,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       const Text(
                         'Historial de Entrenamientos',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -300,14 +378,86 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: 12),
                       Column(
                         children: (_selectedMonth == 'Todos'
-                                ? _sessions[_selectedTeam]?.values.expand((s) => s).toList()
-                                : _sessions[_selectedTeam]?[_selectedMonth])
-                            ?.map((s) {
-                          return ListTile(
-                            title: Text(s['name'] ?? ''),
-                            subtitle: Text('${s['date']} / ${s['duration']}'),
-                          );
-                        }).toList() ??
+                                    ? _sessions[_selectedTeam]
+                                        ?.values
+                                        .expand((s) => s)
+                                        .toList()
+                                    : _sessions[_selectedTeam]?[_selectedMonth])
+                                ?.map((s) {
+                              return ListTile(
+                                title: Text(s['name'] ?? ''),
+                                subtitle:
+                                    Text('${s['date']} / ${s['duration']}'),
+                                onTap: () async {
+                                  final dateParts = s['date']?.split(' de ') ??
+                                      ['1', 'enero'];
+                                  final day = int.tryParse(dateParts[0]) ?? 1;
+                                  final monthName = dateParts[1].toLowerCase();
+                                  final monthMap = {
+                                    'enero': 1,
+                                    'febrero': 2,
+                                    'marzo': 3,
+                                    'abril': 4,
+                                    'mayo': 5,
+                                    'junio': 6,
+                                    'julio': 7,
+                                    'agosto': 8,
+                                    'septiembre': 9,
+                                    'octubre': 10,
+                                    'noviembre': 11,
+                                    'diciembre': 12
+                                  };
+                                  final month = monthMap[monthName] ?? 1;
+                                  final date = DateTime(2025, month, day);
+                                  final dateStr =
+                                      '${date.day.toString().padLeft(2, '0')}-'
+                                      '${date.month.toString().padLeft(2, '0')}-'
+                                      '${date.year}';
+                                  final existingEvaluation =
+                                      _evaluations[_selectedTeam]?[dateStr] ??
+                                          {};
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => TrainingScreen(
+                                        trainingSession: {
+                                          'objective': s['name'] ?? '',
+                                          'date': date,
+                                          'duration': s['duration'] ?? '',
+                                          'exercises': s['exercises'] ?? [],
+                                          'description': s['description'] ?? '',
+                                          'evaluation': existingEvaluation,
+                                        },
+                                        onEvaluationSaved: (evaluation) async {
+                                          final dateStr =
+                                              '${date.day.toString().padLeft(2, '0')}-'
+                                              '${date.month.toString().padLeft(2, '0')}-'
+                                              '${date.year}';
+
+                                          // Inicializamos el mapa de evaluaciones del equipo si no existe
+                                          _evaluations[_selectedTeam] ??= {};
+
+                                          // Guardamos la evaluación de la sesión concreta
+                                          _evaluations[_selectedTeam]![
+                                              dateStr] = {
+                                            'Diversion':
+                                                evaluation['Diversion'] ?? 0,
+                                            'Aprendizaje':
+                                                evaluation['Aprendizaje'] ?? 0,
+                                            'Efectividad':
+                                                evaluation['Efectividad'] ?? 0,
+                                          };
+
+                                          await _saveEvaluations(); // Guardamos en SharedPreferences
+                                          _updateTeamStats(); // Recalculamos medias
+                                          setState(() {}); // Refrescamos la UI
+                                        },
+                                      ),
+                                    ),
+                                  );
+                                },
+                              );
+                            }).toList() ??
                             [],
                       ),
                     ],
@@ -325,7 +475,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       const Text(
                         'Estadísticas del equipo',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       const Text(
@@ -357,15 +508,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 x: 0,
                                 barRods: [
                                   BarChartRodData(
-                                      toY: _teamStats[_selectedTeam]?['Diversion']?.toDouble() ?? 0,
+                                      toY: _teamStats[_selectedTeam]
+                                                  ?['Diversion']
+                                              ?.toDouble() ??
+                                          0,
                                       color: Colors.blue,
                                       width: 15),
                                   BarChartRodData(
-                                      toY: _teamStats[_selectedTeam]?['Aprendizaje']?.toDouble() ?? 0,
+                                      toY: _teamStats[_selectedTeam]
+                                                  ?['Aprendizaje']
+                                              ?.toDouble() ??
+                                          0,
                                       color: Colors.green,
                                       width: 15),
                                   BarChartRodData(
-                                      toY: _teamStats[_selectedTeam]?['Efectividad']?.toDouble() ?? 0,
+                                      toY: _teamStats[_selectedTeam]
+                                                  ?['Efectividad']
+                                              ?.toDouble() ??
+                                          0,
                                       color: Colors.orange,
                                       width: 15),
                                 ],

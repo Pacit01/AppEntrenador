@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "271359926734",
+    "project_id": "coachs-clipboard-c5ves",
+    "storage_bucket": "coachs-clipboard-c5ves.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:271359926734:android:1d0577bca597c90c658b9f",
+        "android_client_info": {
+          "package_name": "com.example.coach_clipboard_flutter"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "271359926734-7buirtjqsqupobso0dm8rn0rvipcg2lj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.coach_clipboard_flutter",
+            "certificate_hash": "5847636c3174cd23c03405e97ec7d1e61f93d4de"
+          }
+        },
+        {
+          "client_id": "271359926734-5lamcjdba0eafpukkq56gcudmcf9nv5o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKxrKGkVK4aIuTPHKZCNNetHpAWwNz3Po"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "271359926734-5lamcjdba0eafpukkq56gcudmcf9nv5o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

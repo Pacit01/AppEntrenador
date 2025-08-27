@@ -22,7 +22,7 @@ class CoachsClipboardApp extends StatelessWidget {
         '/login': (context) => LoginScreen(),
         '/register': (context) => RegisterScreen(),
         '/home': (context) => HomeScreen(),
-        // '/onboarding': (context) => OnboardingScreen(), // agrega cuando la tengas
+        // '/onboarding': (context) => OnboardingScreen(),
       },
     );
   }

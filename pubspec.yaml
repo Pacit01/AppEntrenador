@@ -13,6 +13,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.1.0
   fl_chart: ^1.0.0  # Versión más reciente compatible con Flutter 3.x
+  reorderables: ^0.4.2
   
 dev_dependencies:
   flutter_test:
